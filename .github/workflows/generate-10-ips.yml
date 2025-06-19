@@ -1,8 +1,8 @@
-name: 每 6 小时自动更新 random_ips.txt（生成并提交到仓库）
+name: 每 6 小时生成 10 个随机 IP（覆盖写入 random_ips.txt）
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每 6 小时执行一次（UTC 时间）
+    - cron: '0 */6 * * *'  # 每 6 小时运行一次（UTC 时间）
   workflow_dispatch:
     inputs:
       prefix:
@@ -15,43 +15,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 检出仓库代码（允许提交更改）
+      - name: 检出仓库代码
         uses: actions/checkout@v3
-        with:
-          persist-credentials: true
 
-      - name: 清空旧 IP 并生成新 IP
+      - name: 检查并覆盖写入 random_ips.txt
         run: |
           PREFIX="${{ github.event.inputs.prefix }}"
           FILE="random_ips.txt"
 
-          # 如果文件存在且非空，清空旧内容
+          # 如果文件存在且不为空，清空内容；否则创建新文件
           if [ -s "$FILE" ]; then
-            echo "已检测到旧 IP，清空文件内容"
+            echo "检测到旧的 random_ips.txt，已清空内容"
             > "$FILE"
           else
-            echo "文件不存在或为空，创建并写入"
+            echo "未检测到旧 IP，创建新文件"
             touch "$FILE"
           fi
 
-          # 生成 10 个 IP，尾段 1~200
+          # 生成 10 个随机 IP，写入文件
           for i in $(seq 1 10); do
             LAST=$(( (RANDOM % 200) + 1 ))
             echo "${PREFIX}.${LAST}" >> "$FILE"
           done
 
-      - name: 显示生成的 IP 内容
+      - name: 显示生成的 IP
         run: cat random_ips.txt
-
-      - name: 提交并推送到仓库
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          if ! git diff --quiet; then
-            git add random_ips.txt
-            TIME=$(date -u "+%Y-%m-%d %H:%M:%S UTC")
-            git commit -m "Auto update IPs at $TIME"
-            git push
-          else
-            echo "文件未变化，跳过提交。"
