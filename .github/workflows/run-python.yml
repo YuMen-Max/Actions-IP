@@ -1,38 +1,56 @@
-name: Generate Random IPs
+name: 随机生成 10 个 IP
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
   workflow_dispatch:
+    inputs:
+      prefix:
+        description: 'IP 前缀'
+        required: false
+        default: '172.64.229'
+  # 如需定时触发，可启用下面的定时器
+  # schedule:
+  #   - cron: '0 * * * *'
 
 jobs:
-  generate-ips:
+  generate_ips:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        
-    - name: Show environment info
-      run: |
-        echo "工作目录: $(pwd)"
-        echo "Python版本: $(python --version)"
-        echo "文件列表:"
-        ls -la
-        
-    - name: Run IP generator
-      run: |
-        python generate_ips.py
-        echo "生成的文件内容:"
-        cat generated_ips.txt
-        
-    - name: Upload generated IPs
-      uses: actions/upload-artifact@v4
-      with:
-        name: generated-ips
-        path: generated_ips.txt
+      - name: 检出代码（如果需要提交文件）
+        uses: actions/checkout@v3
+
+      - name: 生成 10 个随机 IP
+        id: gen_ips
+        run: |
+          PREFIX="${{ github.event.inputs.prefix }}"
+          OUTPUT_FILE="random_ips.txt"
+          rm -f "$OUTPUT_FILE"
+          touch "$OUTPUT_FILE"
+
+          # 用数组收集所有 IP
+          IPS=()
+          for i in $(seq 1 10); do
+            OCTET=$(( (RANDOM % 200) + 1 ))
+            IP="${PREFIX}.${OCTET}"
+            IPS+=("$IP")
+            echo "$IP" >> "$OUTPUT_FILE"
+          done
+
+          # 将逗号分隔的列表输出为环境变量
+          IFS=','; echo "RANDOM_IPS=${IPS[*]}" >> $GITHUB_ENV
+          echo "已生成的 IP 列表（逗号分隔）: ${IPS[*]}"
+
+      - name: 显示生成结果
+        run: |
+          echo "环境变量 RANDOM_IPS: $RANDOM_IPS"
+          echo "文件 random_ips.txt 内容："
+          cat random_ips.txt
+
+      # 如果需要自动提交回仓库，请取消以下步骤
+      # - name: 提交 random_ips.txt
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git add random_ips.txt
+      #     git commit -m "自动更新 10 个随机 IP: $RANDOM_IPS"
+      #     git push
