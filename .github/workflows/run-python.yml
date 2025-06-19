@@ -2,7 +2,7 @@ name: Generate Random IPs
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时运行一次
+    - cron: '0 */6 * * *'  # 每6小时运行一次 (UTC时间)
   workflow_dispatch:       # 支持手动触发
 
 jobs:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4   # 使用最新版 checkout
       
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5  # 使用最新版 setup-python
       with:
         python-version: '3.11'
         
@@ -22,7 +22,7 @@ jobs:
       run: python generate_ips.py
       
     - name: Upload generated IPs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # 更新到 v4 版本
       with:
         name: generated-ips
         path: generated_ips.txt
