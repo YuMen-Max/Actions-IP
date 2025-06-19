@@ -1,10 +1,8 @@
-name: 每 6 小时生成 10 个随机 IP 并输出到 TXT
+name: 每 6 小时生成 10 个随机 IP 到 TXT（无需提交，无需创建）
 
 on:
-  # 定时触发：每 6 小时一次（UTC 0 点、6 点、12 点、18 点）
   schedule:
-    - cron: '0 */6 * * *'
-  # 支持手动触发
+    - cron: '0 */6 * * *'  # 每 6 小时运行一次（UTC时间）
   workflow_dispatch:
     inputs:
       prefix:
@@ -13,55 +11,28 @@ on:
         default: '172.64.229'
 
 jobs:
-  generate_and_commit:
+  generate_ips:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 检出仓库并保留写权限
-      - name: 检出仓库
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: true
-
-      # 2. 检测旧文件、清空并生成 10 个随机 IP
-      - name: 生成 10 个随机 IP（清空旧文件逻辑）
-        id: gen_ips
+      - name: 检查并清空旧 IP，写入新 IP
         run: |
           PREFIX="${{ github.event.inputs.prefix }}"
-          OUTPUT_FILE="random_ips.txt"
+          FILE="random_ips.txt"
 
-          # 如果文件存在且非空，则清空
-          if [ -s "$OUTPUT_FILE" ]; then
-            echo "检测到旧的 $OUTPUT_FILE，已清空旧内容"
-            : > "$OUTPUT_FILE"
+          # 如果文件存在且非空，清空旧内容
+          if [ -s "$FILE" ]; then
+            echo "检测到旧 IP，已清空文件。"
+            > "$FILE"
           else
-            echo "未检测到旧文件或文件为空，创建新文件"
-            touch "$OUTPUT_FILE"
+            echo "文件不存在或为空，将写入新 IP。"
           fi
 
-          IPS=()
+          # 生成 10 个随机 IP，尾段在 1~200 范围内
           for i in $(seq 1 10); do
-            OCTET=$(( (RANDOM % 200) + 1 ))
-            IP="${PREFIX}.${OCTET}"
-            IPS+=("$IP")
-            echo "$IP" >> "$OUTPUT_FILE"
+            LAST=$(( (RANDOM % 200) + 1 ))
+            echo "${PREFIX}.${LAST}" >> "$FILE"
           done
 
-          # 将逗号分隔的 IP 列表导出为环境变量
-          IFS=','; echo "RANDOM_IPS=${IPS[*]}" >> $GITHUB_ENV
-          echo "已生成的新 IP 列表：${IPS[*]}"
-
-      # 3. 提交并推送 random_ips.txt 回仓库
-      - name: 提交并推送 random_ips.txt
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # 仅在文件内容有变更时提交
-          if ! git diff --quiet; then
-            git add random_ips.txt
-            git commit -m "Auto update 10 random IPs: $RANDOM_IPS"
-            git push
-          else
-            echo "没有检测到文件变更，跳过提交。"
-          fi
+      - name: 显示生成的 IP
+        run: cat random_ips.txt
