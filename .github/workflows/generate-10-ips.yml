@@ -1,0 +1,67 @@
+name: 每 6 小时生成 10 个随机 IP 并输出到 TXT
+
+on:
+  # 定时触发：每 6 小时一次（UTC 0 点、6 点、12 点、18 点）
+  schedule:
+    - cron: '0 */6 * * *'
+  # 支持手动触发
+  workflow_dispatch:
+    inputs:
+      prefix:
+        description: 'IP 前缀'
+        required: false
+        default: '172.64.229'
+
+jobs:
+  generate_and_commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出仓库并保留写权限
+      - name: 检出仓库
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+
+      # 2. 检测旧文件、清空并生成 10 个随机 IP
+      - name: 生成 10 个随机 IP（清空旧文件逻辑）
+        id: gen_ips
+        run: |
+          PREFIX="${{ github.event.inputs.prefix }}"
+          OUTPUT_FILE="random_ips.txt"
+
+          # 如果文件存在且非空，则清空
+          if [ -s "$OUTPUT_FILE" ]; then
+            echo "检测到旧的 $OUTPUT_FILE，已清空旧内容"
+            : > "$OUTPUT_FILE"
+          else
+            echo "未检测到旧文件或文件为空，创建新文件"
+            touch "$OUTPUT_FILE"
+          fi
+
+          IPS=()
+          for i in $(seq 1 10); do
+            OCTET=$(( (RANDOM % 200) + 1 ))
+            IP="${PREFIX}.${OCTET}"
+            IPS+=("$IP")
+            echo "$IP" >> "$OUTPUT_FILE"
+          done
+
+          # 将逗号分隔的 IP 列表导出为环境变量
+          IFS=','; echo "RANDOM_IPS=${IPS[*]}" >> $GITHUB_ENV
+          echo "已生成的新 IP 列表：${IPS[*]}"
+
+      # 3. 提交并推送 random_ips.txt 回仓库
+      - name: 提交并推送 random_ips.txt
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 仅在文件内容有变更时提交
+          if ! git diff --quiet; then
+            git add random_ips.txt
+            git commit -m "Auto update 10 random IPs: $RANDOM_IPS"
+            git push
+          else
+            echo "没有检测到文件变更，跳过提交。"
+          fi
