@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 检出仓库代码（用于修改并提交）
+      - name: 检出仓库代码（允许提交更改）
         uses: actions/checkout@v3
         with:
-          persist-credentials: true  # 允许使用 GitHub Token 自动 push
+          persist-credentials: true
 
       - name: 清空旧 IP 并生成新 IP
         run: |
@@ -50,8 +50,8 @@ jobs:
 
           if ! git diff --quiet; then
             git add random_ips.txt
-            COMMIT_MSG="Auto update IPs at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-            git commit -m "$COMMIT_MSG"
+            TIME=$(date -u "+%Y-%m-%d %H:%M:%S UTC")
+            git commit -m "Auto update IPs at $TIME"
             git push
           else
             echo "文件未变化，跳过提交。"
