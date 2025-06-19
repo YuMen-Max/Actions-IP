@@ -1,0 +1,42 @@
+name: Run Python Script
+
+on:
+  schedule:
+    # 每6小时运行一次 (UTC时间)
+    - cron: '0 */6 * * *'
+  
+  # 添加手动触发按钮
+  workflow_dispatch:
+    inputs:
+      log_level:
+        description: 'Log level (optional)'
+        required: false
+        default: 'info'
+      flags:
+        description: 'Additional flags (optional)'
+        required: false
+
+jobs:
+  execute-python:
+    runs-on: ubuntu-latest  # 使用最新版Ubuntu系统
+
+    steps:
+      # 1. 检出仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 设置Python环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # 指定Python版本
+
+      # 3. 安装依赖 (如果有requirements.txt)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # 4. 执行Python脚本
+      - name: Run Python script
+        run: python main.py  # 替换为你的脚本名称
