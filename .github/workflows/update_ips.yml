@@ -1,26 +1,45 @@
-name: 随机生成 10 个 IP
+name: Auto Update Random IPs
 
 on:
-  workflow_dispatch:
-    inputs:
-      prefix:
-        description: 'IP 前缀'
-        required: false
-        default: '172.64.229'
-  # 如需定时触发，可启用下面的定时器
-  # schedule:
-  #   - cron: '0 * * * *'
+  schedule:
+    # 每 6 小时运行一次
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # 允许手动触发
 
 jobs:
-  generate_ips:
+  generate-ips:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 检出代码（如果需要提交文件）
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: 生成 10 个随机 IP
-        id: gen_ips
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install random
+
+    - name: Generate random IPs
+      run: |
+        python -c "
+        import random;
+        random_ips = ['172.64.229.' + str(random.randint(1,199)) for _ in range(10)];
+        with open('random_ips.txt', 'w') as f:
+            f.write('\\n'.join(random_ips))
+        "
+
+    - name: Commit and push changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add random_ips.txt
+        git commit -m 'Update random IPs'
+        git push
         run: |
           PREFIX="${{ github.event.inputs.prefix }}"
           OUTPUT_FILE="random_ips.txt"
