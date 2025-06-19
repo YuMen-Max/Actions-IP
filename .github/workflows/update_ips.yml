@@ -19,9 +19,6 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install dependencies
-      run: pip install random
-
     - name: Generate random IPs
       run: |
         python -c "
@@ -40,36 +37,3 @@ jobs:
         git add random_ips.txt
         git commit -m 'Update random IPs'
         git push
-        run: |
-          PREFIX="${{ github.event.inputs.prefix }}"
-          OUTPUT_FILE="random_ips.txt"
-          rm -f "$OUTPUT_FILE"
-          touch "$OUTPUT_FILE"
-
-          # 用数组收集所有 IP
-          IPS=()
-          for i in $(seq 1 10); do
-            OCTET=$(( (RANDOM % 200) + 1 ))
-            IP="${PREFIX}.${OCTET}"
-            IPS+=("$IP")
-            echo "$IP" >> "$OUTPUT_FILE"
-          done
-
-          # 将逗号分隔的列表输出为环境变量
-          IFS=','; echo "RANDOM_IPS=${IPS[*]}" >> $GITHUB_ENV
-          echo "已生成的 IP 列表（逗号分隔）: ${IPS[*]}"
-
-      - name: 显示生成结果
-        run: |
-          echo "环境变量 RANDOM_IPS: $RANDOM_IPS"
-          echo "文件 random_ips.txt 内容："
-          cat random_ips.txt
-
-      # 如果需要自动提交回仓库，请取消以下步骤
-      # - name: 提交 random_ips.txt
-      #   run: |
-      #     git config user.name "github-actions[bot]"
-      #     git config user.email "github-actions[bot]@users.noreply.github.com"
-      #     git add random_ips.txt
-      #     git commit -m "自动更新 10 个随机 IP: $RANDOM_IPS"
-      #     git push
