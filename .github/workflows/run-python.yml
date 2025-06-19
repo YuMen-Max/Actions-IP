@@ -2,8 +2,8 @@ name: Generate Random IPs
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时运行一次 (UTC时间)
-  workflow_dispatch:       # 支持手动触发
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   generate-ips:
@@ -11,18 +11,28 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4   # 使用最新版 checkout
+      uses: actions/checkout@v4
       
     - name: Set up Python
-      uses: actions/setup-python@v5  # 使用最新版 setup-python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         
+    - name: Show environment info
+      run: |
+        echo "工作目录: $(pwd)"
+        echo "Python版本: $(python --version)"
+        echo "文件列表:"
+        ls -la
+        
     - name: Run IP generator
-      run: python generate_ips.py
-      
+      run: |
+        python generate_ips.py
+        echo "生成的文件内容:"
+        cat generated_ips.txt
+        
     - name: Upload generated IPs
-      uses: actions/upload-artifact@v4  # 更新到 v4 版本
+      uses: actions/upload-artifact@v4
       with:
         name: generated-ips
         path: generated_ips.txt
