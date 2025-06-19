@@ -23,7 +23,7 @@ jobs:
       run: |
         python -c "
         import random;
-        random_ips = ['172.64.229.' + str(random.randint(1,199)) for _ in range(5)];
+        random_ips = ['172.64.229.' + str(random.randint(1,199)) for _ in range(3)];
         with open('random_ips.txt', 'w') as f:
             f.write('\\n'.join(random_ips))
         "
