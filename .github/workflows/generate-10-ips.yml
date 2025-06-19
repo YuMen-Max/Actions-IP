@@ -1,42 +1,28 @@
-name: 每 6 小时生成 10 个随机 IP（覆盖写入 random_ips.txt）
+name: 每 6 小时运行根目录 Python 脚本
 
 on:
   schedule:
     - cron: '0 */6 * * *'  # 每 6 小时运行一次（UTC 时间）
-  workflow_dispatch:
-    inputs:
-      prefix:
-        description: 'IP 前缀'
-        required: false
-        default: '172.64.229'
+  workflow_dispatch:      # 支持手动运行
 
 jobs:
-  generate_ips:
+  run_python:
     runs-on: ubuntu-latest
 
     steps:
       - name: 检出仓库代码
         uses: actions/checkout@v3
 
-      - name: 检查并覆盖写入 random_ips.txt
-        run: |
-          PREFIX="${{ github.event.inputs.prefix }}"
-          FILE="random_ips.txt"
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # 可改为你项目使用的版本
 
-          # 如果文件存在且不为空，清空内容；否则创建新文件
-          if [ -s "$FILE" ]; then
-            echo "检测到旧的 random_ips.txt，已清空内容"
-            > "$FILE"
-          else
-            echo "未检测到旧 IP，创建新文件"
-            touch "$FILE"
+      - name: 安装依赖（如有 requirements.txt）
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
           fi
 
-          # 生成 10 个随机 IP，写入文件
-          for i in $(seq 1 10); do
-            LAST=$(( (RANDOM % 200) + 1 ))
-            echo "${PREFIX}.${LAST}" >> "$FILE"
-          done
-
-      - name: 显示生成的 IP
-        run: cat random_ips.txt
+      - name: 执行根目录 Python 脚本
+        run: python main.py
