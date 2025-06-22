@@ -3,7 +3,7 @@ name: Auto Update Random IPs
 on:
   schedule:
     # 每 6 小时运行一次
-    - cron: "0 */3 * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch: # 允许手动触发
 
 jobs:
