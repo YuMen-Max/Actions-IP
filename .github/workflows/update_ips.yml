@@ -2,8 +2,8 @@ name: Auto Update Random IPs
 
 on:
   schedule:
-    # 每天中国时间凌晨 0 点运行 (UTC时间是前一天的16点)
-    - cron: "0 16 * * *"
+    # 每天中国时间每 6 小时运行一次 (UTC时间是前一天的16点, 22点, 当前日的4点, 10点)
+    - cron: "0 16,22,4,10 * * *"
   workflow_dispatch: # 允许手动触发
 
 jobs:
