@@ -2,9 +2,8 @@ name: Auto Update Random IPs
 
 on:
   schedule:
-    # 每天中国时间每 6 小时运行一次 (UTC时间是前一天的16点, 22点, 当前日的4点, 10点)
     - cron: "0 16,22,4,10 * * *"
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   generate-ips:
@@ -23,9 +22,20 @@ jobs:
       run: |
         python -c "
         import random;
-        random_ips = ['172.64.229.' + str(random.randint(1,255)) for _ in range(1)];
+        # 控制每个前缀生成的IP数量
+        ip_count_per_prefix = 1
+        
+        # 生成172.64.229.xx段的随机IP
+        prefix1_ips = ['172.64.229.' + str(random.randint(1,255)) for _ in range(ip_count_per_prefix)]
+        
+        # 生成43.174.150.xx段的随机IP
+        prefix2_ips = ['43.174.150.' + str(random.randint(1,255)) for _ in range(ip_count_per_prefix)]
+        
+        # 合并所有IP
+        all_ips = prefix1_ips + prefix2_ips
+        
         with open('random_ips.txt', 'w') as f:
-            f.write('\\n'.join(random_ips))
+            f.write('\\n'.join(all_ips))
         "
 
     - name: Commit and push changes
