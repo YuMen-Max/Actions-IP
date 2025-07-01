@@ -22,20 +22,14 @@ jobs:
       run: |
         python -c "
         import random;
-        # 控制每个前缀生成的IP数量
-        ip_count_per_prefix = 1
+        # 控制生成的IP数量
+        ip_count = 1
         
-        # 生成172.64.229.xx段的随机IP
-        prefix1_ips = ['172.64.229.' + str(random.randint(1,255)) for _ in range(ip_count_per_prefix)]
-        
-        # 生成43.174.150.xx段的随机IP
-        prefix2_ips = ['43.174.150.' + str(random.randint(1,255)) for _ in range(ip_count_per_prefix)]
-        
-        # 合并所有IP
-        all_ips = prefix1_ips + prefix2_ips
+        # 只生成172.64.229.xx段的随机IP
+        ips = ['172.64.229.' + str(random.randint(1,255)) for _ in range(ip_count)]
         
         with open('random_ips.txt', 'w') as f:
-            f.write('\\n'.join(all_ips))
+            f.write('\\n'.join(ips))
         "
 
     - name: Commit and push changes
