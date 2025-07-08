@@ -2,7 +2,7 @@ name: Auto Update Random IPs
 
 on:
   schedule:
-    - cron: "0 16 * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:
 
 jobs:
